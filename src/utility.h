@@ -8,11 +8,35 @@ using ColVectorD = blaze::DynamicVector<double, blaze::columnVector>;
 using ColMatrixD = blaze::DynamicMatrix<double, blaze::columnMajor>;
 
 namespace util {
+namespace data {
+
+/// Write the vector to a .dat file, to be plottable with the utility scripts.
+template <typename OutStream> void writeDat(const ColVectorD &V, OutStream &S) {
+  for (std::size_t I = 0; I < V.size(); ++I)
+    S << I << "\t" << V[I] << "\n";
+}
+
+/// Write the matrix to a .dat file, to be plottable with the utility scripts.
+template <typename OutStream> void writeDat(const ColMatrixD &M, OutStream &S) {
+  for (std::size_t Col = 0; Col < M.columns(); ++Col) {
+    for (std::size_t Row = 0; Row < M.rows(); ++Row)
+      S << Col << "\t" << Row << "\t" << M.at(Row, Col) << "\n";
+    Col == M.columns() - 1 ? (void)Col : (void)(S << "\n");
+  }
+}
+} // namespace data
+
 namespace images {
 
 /// This function creates a Vector with constant values.
 template <std::size_t Dim> ColVectorD createConstant(double Value) {
   return ColVectorD(Dim, Value);
+}
+
+/// This function creates a Matrix (image) with constant values.
+template <std::size_t Rows, std::size_t Columns>
+ColMatrixD createConstant(double Value) {
+  return ColMatrixD(Rows, Columns, Value);
 }
 
 /// Create a vector with \tp Dim elements that are calculated with \p f in the
@@ -23,12 +47,8 @@ ColVectorD createFunction(double X1, double X2, Func f) {
   double DX = (X2 - X1) / Dim;
   double X = X1;
 
-  for (std::size_t I = 0ul; I < (Dim - 1); ++I) {
+  for (std::size_t I = 0ul; I < Dim; ++I, X += DX)
     Result[I] = f(X);
-    X += DX;
-  }
-  Result[Dim - 1] = f(X2);
-
   return Result;
 }
 
@@ -57,17 +77,17 @@ ColVectorD vec(const ColMatrixD &Mat) {
 }
 
 ColMatrixD unvec(const ColVectorD &Vec, std::size_t Rows, std::size_t Columns) {
-    if (Rows * Columns != Vec.size())
-        throw std::runtime_error{"Incompatible dimensions for unvec function"};
-    ColMatrixD Result(Rows, Columns);
-    
-    for (std::size_t I = 0; I < Columns; I += Rows) {
-        auto S = blaze::subvector(Vec, I, Rows);
-        auto C = blaze::column(Result, I);
-        C = S;
-    }
+  if (Rows * Columns != Vec.size())
+    throw std::runtime_error{"Incompatible dimensions for unvec function"};
+  ColMatrixD Result(Rows, Columns);
 
-    return Result;
+  for (std::size_t I = 0; I < Columns; I += Rows) {
+    auto S = blaze::subvector(Vec, I, Rows);
+    auto C = blaze::column(Result, I);
+    C = S;
+  }
+
+  return Result;
 }
 } // namespace math
 } // namespace util
