@@ -9,3 +9,5 @@ add_executable(trivial_matrices.x src/main_trivial_matrices.cpp)
 target_link_libraries(trivial_matrices.x blaze_target)
 
 add_compile_options("-march=native")
+
+add_subdirectory(test)

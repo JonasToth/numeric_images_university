@@ -55,6 +55,20 @@ ColVectorD vec(const ColMatrixD &Mat) {
   }
   return Result;
 }
+
+ColMatrixD unvec(const ColVectorD &Vec, std::size_t Rows, std::size_t Columns) {
+    if (Rows * Columns != Vec.size())
+        throw std::runtime_error{"Incompatible dimensions for unvec function"};
+    ColMatrixD Result(Rows, Columns);
+    
+    for (std::size_t I = 0; I < Columns; I += Rows) {
+        auto S = blaze::subvector(Vec, I, Rows);
+        auto C = blaze::column(Result, I);
+        C = S;
+    }
+
+    return Result;
+}
 } // namespace math
 } // namespace util
 
